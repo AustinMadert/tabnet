@@ -1,25 +1,7 @@
 import torch
 import torch.nn as nn
-
-
-class TabNetEncoder(nn.Module):
-
-    def __init__(self) -> None:
-        super().__init__()
-
-
-    def forward(self, X: torch.Tensor) -> torch.Tensor:
-        return X
-
-
-class TabNetDecoder(nn.Module):
-
-    def __init__(self) -> None:
-        super().__init__()
-
-
-    def forward(self, X: torch.Tensor) -> torch.Tensor:
-        return X
+from decoder import TabNetDecoder
+from encoder import TabNetEncoder
 
 
 class TabNet(nn.Module):
