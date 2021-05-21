@@ -22,7 +22,8 @@ class FeatureBlock(nn.Module):
             identity = X
             out = sub_block(X)
             out += identity
-            # TODO: add normalization
+            # Normalization which halves Var
+            out *= torch.sqrt(0.5)
         return out
 
 
