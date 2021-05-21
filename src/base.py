@@ -22,3 +22,7 @@ class TorchBase(object):
 
     def fit(self, X: torch.Tensor, y: torch.Tensor = None) -> ModelBase:
         return self
+
+
+    def predict(self, X: torch.Tensor) -> torch.Tensor:
+        pass
