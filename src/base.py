@@ -26,3 +26,7 @@ class TorchBase(object):
 
     def predict(self, X: torch.Tensor) -> torch.Tensor:
         pass
+
+
+    def score(self, X: torch.Tensor, y: torch.Tensor) -> float:
+        pass
