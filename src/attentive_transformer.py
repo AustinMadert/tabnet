@@ -27,3 +27,7 @@ class AttentiveTransformer(nn.Module):
         mask = self.sparsemax(a)
         p = self.update_p(p)
         return mask, p
+
+
+def sparsity_regularization(masks: torch.Tensor, eta: float = 0.00001) -> float:
+    pass
