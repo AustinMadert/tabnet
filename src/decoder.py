@@ -9,6 +9,7 @@ class TabNetDecoderStep(nn.Module):
 
     def __init__(self, shared_feat: FeatureBlock, input_size: int, output_size: int) -> None:
         super().__init__()
+        self.input_size = input_size
         self.feat = self.build_feature_transformer(shared_feat)
         self.fc = nn.Linear(input_size, output_size)
 

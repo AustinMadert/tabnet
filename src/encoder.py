@@ -8,10 +8,11 @@ from transformers import FeatureBlock, AttentiveTransformer
 
 class TabNetEncoderStep(nn.Module):
 
-    def __init__(self, input_size: int, shared_feat_transformer: FeatureBlock) -> None:
+    def __init__(self, shared_feat: FeatureBlock, input_size: int) -> None:
         super().__init__()
+        self.shared_feat = shared_feat
+        self.input_size = input_size
         self.att = AttentiveTransformer(input_size=input_size)
-        self.shared_feat = shared_feat_transformer
         self.feat = self.build_feature_transformer()
         self.p = torch.ones(self.input_size, self.input_size)
 
@@ -60,7 +61,7 @@ class TabNetEncoder(nn.Module):
         )
 
     def build_encoder_steps(self) -> List[nn.Module]:
-        return [TabNetEncoderStep(self.input_size, self.shared_feat) 
+        return [TabNetEncoderStep(self.shared_feat, self.input_size) 
                 for _ in range(self.n_steps)]
 
 
