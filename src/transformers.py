@@ -9,7 +9,7 @@ class AttentiveTransformer(nn.Module):
     def __init__(self, input_size: int, rho: float = 1.0) -> None:
         super().__init__()
         self.h = nn.linear(input_size, input_size)
-        self.bn = nn.BatchNorm2d()
+        self.bn = nn.BatchNorm2d(input_size)
         self.sparsemax = Sparsemax(dim=-1)
         self.rho = rho
 
@@ -41,8 +41,8 @@ class FeatureBlock(nn.Module):
     def feature_sub_block(self) -> nn.Sequential:
         return nn.Sequential(
             nn.Linear(self.input_size, self.input_size),
-            nn.BatchNorm2d,
-            nn.GLU
+            nn.BatchNorm2d(self.input_size),
+            nn.GLU()
         )
 
     def forward(self, X: torch.Tensor) -> torch.Tensor:

@@ -1,6 +1,7 @@
 from typing import List
 import torch
 import torch.nn as nn
+from torch.nn.modules.container import Sequential
 
 from transformers import FeatureBlock, AttentiveTransformer
 
@@ -43,11 +44,20 @@ class TabNetEncoder(nn.Module):
         self.input_size = input_size * 2
         if not output_size:
             self.output_size = input_size
-        self.shared_feat = FeatureBlock(input_size=input_size, output_size=self.input_size)
+        self.shared_feat = self.build_shared_feature_transformer(input_size)
         self.feat = self.build_feature_transformer()
-        self.bn = nn.BatchNorm2d()
+        self.bn = nn.BatchNorm2d(input_size)
         self.fc = nn.Linear(input_size, input_size)
         self.steps = self.build_encoder_steps()
+
+
+    def build_shared_feature_transformer(self, input_size) -> nn.Module:
+        return Sequential(
+            nn.Linear(self.input_size, input_size),
+            nn.BatchNorm2d(input_size),
+            nn.GLU(),
+            FeatureBlock(self.input_size, sub_block_size=1)
+        )
         
 
     def build_feature_transformer(self) -> nn.Module:
@@ -76,4 +86,4 @@ class TabNetEncoder(nn.Module):
 
         output = self.fc(output)
 
-        return output, attributes
+        return output, attributes, self.shared_feat
