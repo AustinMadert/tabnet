@@ -36,15 +36,15 @@ class TabNetEncoderStep(nn.Module):
 
 class TabNetEncoder(nn.Module):
 
-    def __init__(self, input_size: int, batch_size: int,  n_steps: int = 10, 
-                output_size: int = None) -> None:
+    def __init__(self, shared_feat: FeatureBlock, input_size: int, batch_size: int,  
+                output_size: int = None, n_steps: int = 10) -> None:
         super().__init__()
+        self.shared_feat = shared_feat
         self.n_steps = n_steps
         self.batch_size = batch_size
         self.input_size = input_size * 2
         if not output_size:
             self.output_size = input_size
-        self.shared_feat = self.build_shared_feature_transformer(input_size)
         self.feat = self.build_feature_transformer()
         self.bn = nn.BatchNorm2d(input_size)
         self.fc = nn.Linear(input_size, input_size)

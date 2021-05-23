@@ -29,12 +29,13 @@ class TabNetDecoderStep(nn.Module):
 class TabNetDecoder(nn.Module):
 
     def __init__(self, shared_feat: FeatureBlock, input_size: int, output_size: int, 
-                n_steps: int, batch_size: int) -> None:
+                batch_size: int, n_steps: int)  -> None:
         super().__init__()
         self.shared_feat = shared_feat
         self.input_size = input_size
         self.output_size = output_size
         self.n_steps = n_steps
+        self.batch_size = batch_size
         self.output = torch.zeros(batch_size, input_size)
         self.steps = self.build_decoder_steps()
 
