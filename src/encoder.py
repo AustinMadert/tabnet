@@ -51,15 +51,6 @@ class TabNetEncoder(nn.Module):
         self.steps = self.build_encoder_steps()
         self.attributes = torch.zeros(self.batch_size, self.input_size)
         self.output = torch.zeros(self.batch_size, self.input_size)
-
-
-    def build_shared_feature_transformer(self, input_size) -> nn.Module:
-        return Sequential(
-            nn.Linear(self.input_size, input_size),
-            nn.BatchNorm2d(input_size),
-            nn.GLU(),
-            FeatureBlock(self.input_size, sub_block_size=1)
-        )
         
 
     def build_feature_transformer(self) -> nn.Module:
@@ -85,4 +76,4 @@ class TabNetEncoder(nn.Module):
 
         self.output = self.fc(self.output)
 
-        return self.output, self.attributes, self.shared_feat
+        return self.output, self.attributes
