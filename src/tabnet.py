@@ -13,6 +13,6 @@ class TabNet(nn.Module):
 
 
     def forward(self, X: torch.Tensor) -> torch.Tensor:
-        X = self.encoder(X)
+        encoded, attributes = self.encoder(X)
         X = self.decoder(X)
         return X

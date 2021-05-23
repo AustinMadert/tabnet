@@ -65,15 +65,15 @@ class TabNetEncoder(nn.Module):
         X = self.bn(X)
         X = self.feat(X)
         _, a = X.split(X.shape[1] / 2, dim=1)
-        
+
         attributes = torch.zeros(self.batch_size, self.input_size)
-        outputs = torch.zeros(self.batch_size, self.input_size)
+        output = torch.zeros(self.batch_size, self.input_size)
 
         for step in self.steps:
             out, a, mask = step(X, a)
-            outputs += out
+            output += out
             attributes += (mask * out)
 
-        outputs = self.fc(outputs)
+        output = self.fc(output)
 
-        return outputs, attributes
+        return output, attributes
