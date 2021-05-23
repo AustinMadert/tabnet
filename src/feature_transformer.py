@@ -4,9 +4,11 @@ import torch.nn as nn
 
 class FeatureBlock(nn.Module):
 
-    def __init__(self, input_size: int, sub_block_size: int = 2) -> None:
+    def __init__(self, input_size: int, output_size: int = None,
+                 sub_block_size: int = 2) -> None:
         super().__init__()
         self.input_size = input_size
+        self.output_size = input_size if not output_size else output_size
         self.sub_blocks = [self.feature_sub_block() for _ in range(sub_block_size)]
 
     def feature_sub_block(self) -> nn.Sequential:
