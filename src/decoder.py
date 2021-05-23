@@ -8,5 +8,13 @@ class TabNetDecoder(nn.Module):
         super().__init__()
 
 
-    def forward(self, X: torch.Tensor) -> torch.Tensor:
+    def build_feature_transformer(self) -> nn.Module:
+        return nn.Sequential(
+            self.shared_feat,
+            FeatureBlock(self.input_size)
+        )
+
+
+    def forward(self, X: torch.Tensor, shared_feat: torch.Tensor) -> torch.Tensor:
+
         return X
