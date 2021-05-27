@@ -6,10 +6,10 @@ from sparsemax import Sparsemax
 
 class AttentiveTransformer(nn.Module):
 
-    def __init__(self, input_size: int, rho: float = 1.0) -> None:
+    def __init__(self, input_dim: int, rho: float = 1.0) -> None:
         super().__init__()
-        self.h = nn.linear(input_size, input_size)
-        self.bn = nn.BatchNorm2d(input_size)
+        self.h = nn.Linear(input_dim, input_dim)
+        self.bn = nn.BatchNorm1d(input_dim)
         self.sparsemax = Sparsemax(dim=-1)
         self.rho = rho
 
@@ -31,17 +31,17 @@ class AttentiveTransformer(nn.Module):
 
 class FeatureBlock(nn.Module):
 
-    def __init__(self, input_size: int, output_size: int = None,
-                 sub_block_size: int = 2) -> None:
+    def __init__(self, input_dim: int, output_dim: int = None,
+                 sub_block_dim: int = 2) -> None:
         super().__init__()
-        self.input_size = input_size
-        self.output_size = input_size if not output_size else output_size
-        self.sub_blocks = [self.feature_sub_block() for _ in range(sub_block_size)]
+        self.input_dim = input_dim
+        self.output_dim = input_dim if not output_dim else output_dim
+        self.sub_blocks = [self.feature_sub_block() for _ in range(sub_block_dim)]
 
     def feature_sub_block(self) -> nn.Sequential:
         return nn.Sequential(
-            nn.Linear(self.input_size, self.input_size),
-            nn.BatchNorm2d(self.input_size),
+            nn.Linear(self.input_dim, self.input_dim),
+            nn.BatchNorm1d(self.input_dim),
             nn.GLU()
         )
 
@@ -58,10 +58,10 @@ class FeatureBlock(nn.Module):
 
 class FeatureTransformer(nn.Module):
 
-    def __init__(self, input_size: int, nblocks: int = 2) -> None:
+    def __init__(self, input_dim: int, nblocks: int = 2) -> None:
         super().__init__()
-        self.input_size = input_size
-        blocks = [FeatureBlock(input_size) for _ in range(nblocks)]
+        self.input_dim = input_dim
+        blocks = [FeatureBlock(input_dim) for _ in range(nblocks)]
         self.blocks = nn.Sequential(*blocks)
 
 
