@@ -8,13 +8,16 @@ from transformers import FeatureBlock, AttentiveTransformer
 
 class TabNetEncoderStep(nn.Module):
 
-    def __init__(self, shared_feat: FeatureBlock, hidden_dim: int) -> None:
+    def __init__(self, shared_feat: FeatureBlock, input_dim: int, batch_dim: int, hidden_dim: int) -> None:
         super().__init__()
         self.shared_feat = shared_feat
+        self.input_dim = input_dim
+        self.batch_dim = batch_dim
         self.hidden_dim = hidden_dim
-        self.att = AttentiveTransformer(hidden_dim=hidden_dim)
+        self.att = AttentiveTransformer(input_dim=input_dim)
         self.feat = self.build_feature_transformer()
-        self.p = torch.ones(self.hidden_dim, self.hidden_dim)
+        self.p = torch.ones(self.batch_dim, self.input_dim)
+        self.relu = nn.ReLU()
 
 
     def build_feature_transformer(self) -> nn.Module:
@@ -27,10 +30,11 @@ class TabNetEncoderStep(nn.Module):
     def forward(self, X: torch.Tensor, a: torch.Tensor) -> torch.Tensor:
         mask, self.p = self.att(a, self.p)
         X *= mask
-        X = self.feat(X)
+        out = self.feat(X)
         # Split activations from outputs in the columns dimension
-        out, a = X.split(X.shape[1] / 2, dim=1)
-        out = nn.ReLU(out)
+        splits = (int(out.shape[1] / 2), int(out.shape[1] / 2))
+        out, a = out.split(splits, dim=1)
+        out = self.relu(out)
         return out, a, mask
 
 
@@ -43,7 +47,7 @@ class TabNetEncoder(nn.Module):
         self.shared_feat = shared_feat
         self.n_steps = n_steps
         self.batch_dim = batch_dim
-        self.input_dim = input_dim * 2
+        self.input_dim = input_dim
         self.output_dim = input_dim if not output_dim else output_dim
         self.hidden_dim = hidden_dim
         self.bn = nn.BatchNorm1d(input_dim)
@@ -54,7 +58,7 @@ class TabNetEncoder(nn.Module):
 
 
     def build_encoder_steps(self) -> List[nn.Module]:
-        return [TabNetEncoderStep(self.shared_feat, self.hidden_dim) 
+        return [TabNetEncoderStep(self.shared_feat, self.input_dim, self.batch_dim, self.hidden_dim) 
                 for _ in range(self.n_steps)]
 
 

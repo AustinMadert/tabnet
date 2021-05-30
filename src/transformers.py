@@ -7,10 +7,10 @@ from activations import GLU
 
 class AttentiveTransformer(nn.Module):
 
-    def __init__(self, hidden_dim: int, rho: float = 1.0) -> None:
+    def __init__(self, input_dim: int, rho: float = 1.0) -> None:
         super().__init__()
-        self.h = nn.Linear(hidden_dim, hidden_dim)
-        self.bn = nn.BatchNorm1d(hidden_dim)
+        self.h = nn.Linear(input_dim, input_dim)
+        self.bn = nn.BatchNorm1d(input_dim)
         self.sparsemax = Sparsemax(dim=-1)
         self.rho = rho
 
@@ -53,7 +53,7 @@ class FeatureBlock(nn.Module):
             out = sub_block(X)
             out += identity
             # Normalization which halves Var
-            out *= torch.sqrt(0.5)
+            out *= torch.sqrt(torch.Tensor([0.5]))
         return out
 
 

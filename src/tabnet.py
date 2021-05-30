@@ -57,12 +57,12 @@ class TabNet(nn.Module):
     # TODO: need to add flags to control mode of operation, or build separate classes
     def forward(self, X: torch.Tensor) -> torch.Tensor:
         X = self.bn(X)
-        X = self.shared_feat(X)
-        splits = (int(X.shape[1] / 2), int(X.shape[1] / 2))
-        _, a = X.split(splits, dim=1)
+        out = self.shared_feat(X)
+        splits = (int(out.shape[1] / 2), int(out.shape[1] / 2))
+        _, a = out.split(splits, dim=1)
         encoded, attributes = self.encoder(X, a)
-        X = self.decoder(encoded)
-        return X, attributes
+        decoded = self.decoder(encoded)
+        return decoded, attributes
 
 
 from sklearn.datasets import load_boston

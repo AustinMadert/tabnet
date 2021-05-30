@@ -50,6 +50,6 @@ class TabNetDecoder(nn.Module):
 
     def forward(self, X: torch.Tensor) -> torch.Tensor:
         for step in self.steps:
-            X = step(X)
-            self.output += X
+            out = step(X)
+            self.output += out
         return self.output
