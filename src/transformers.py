@@ -2,14 +2,15 @@ from typing import Tuple
 import torch
 import torch.nn as nn
 from sparsemax import Sparsemax
+from activations import GLU
 
 
 class AttentiveTransformer(nn.Module):
 
-    def __init__(self, input_dim: int, rho: float = 1.0) -> None:
+    def __init__(self, hidden_dim: int, rho: float = 1.0) -> None:
         super().__init__()
-        self.h = nn.Linear(input_dim, input_dim)
-        self.bn = nn.BatchNorm1d(input_dim)
+        self.h = nn.Linear(hidden_dim, hidden_dim)
+        self.bn = nn.BatchNorm1d(hidden_dim)
         self.sparsemax = Sparsemax(dim=-1)
         self.rho = rho
 
@@ -25,28 +26,28 @@ class AttentiveTransformer(nn.Module):
         a = self.bn(self.h(a))
         a = p * a
         mask = self.sparsemax(a)
-        p = self.update_p(p)
+        p = self.update_p(p, mask)
         return mask, p
 
 
 class FeatureBlock(nn.Module):
 
-    def __init__(self, input_dim: int, output_dim: int = None,
-                 sub_block_dim: int = 2) -> None:
+    def __init__(self, hidden_dim: int, output_dim: int = None,
+                 num_sub_blocks: int = 2) -> None:
         super().__init__()
-        self.input_dim = input_dim
-        self.output_dim = input_dim if not output_dim else output_dim
-        self.sub_blocks = [self.feature_sub_block() for _ in range(sub_block_dim)]
+        self.hidden_dim = hidden_dim
+        self.output_dim = hidden_dim if not output_dim else output_dim
+        self.sub_blocks = [self.feature_sub_block() for _ in range(num_sub_blocks)]
+
 
     def feature_sub_block(self) -> nn.Sequential:
         return nn.Sequential(
-            nn.Linear(self.input_dim, self.input_dim),
-            nn.BatchNorm1d(self.input_dim),
-            nn.GLU()
+            nn.Linear(self.hidden_dim, self.output_dim),
+            nn.BatchNorm1d(self.hidden_dim),
+            GLU(input_dim=self.hidden_dim)
         )
 
     def forward(self, X: torch.Tensor) -> torch.Tensor:
-        # TODO: double check whether it's bad to have skip conn on first sub block
         for sub_block in self.sub_blocks:
             identity = X
             out = sub_block(X)
@@ -54,20 +55,6 @@ class FeatureBlock(nn.Module):
             # Normalization which halves Var
             out *= torch.sqrt(0.5)
         return out
-
-
-class FeatureTransformer(nn.Module):
-
-    def __init__(self, input_dim: int, nblocks: int = 2) -> None:
-        super().__init__()
-        self.input_dim = input_dim
-        blocks = [FeatureBlock(input_dim) for _ in range(nblocks)]
-        self.blocks = nn.Sequential(*blocks)
-
-
-    def forward(self, X: torch.Tensor) -> torch.Tensor:
-        # TODO: check output dims expected for split block
-        return self.blocks(X)
 
 
 def sparsity_regularization(masks: torch.Tensor, eta: float = 0.00001) -> float:

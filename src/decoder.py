@@ -7,19 +7,18 @@ from transformers import FeatureBlock
 
 class TabNetDecoderStep(nn.Module):
 
-    def __init__(self, shared_feat: FeatureBlock, input_dim: int, output_dim: int) -> None:
+    def __init__(self, shared_feat: FeatureBlock, hidden_dim: int, output_dim: int) -> None:
         super().__init__()
-        self.input_dim = input_dim
-        if not output_dim:
-            self.output_dim = input_dim
+        self.hidden_dim = hidden_dim
+        self.output_dim = hidden_dim if not output_dim else output_dim
         self.feat = self.build_feature_transformer(shared_feat)
-        self.fc = nn.Linear(input_dim, self.output_dim)
+        self.fc = nn.Linear(hidden_dim, self.output_dim)
 
 
     def build_feature_transformer(self, shared_feat: FeatureBlock) -> nn.Module:
         return nn.Sequential(
             shared_feat,
-            FeatureBlock(self.input_dim)
+            FeatureBlock(self.hidden_dim)
         )
 
 
@@ -32,11 +31,12 @@ class TabNetDecoderStep(nn.Module):
 class TabNetDecoder(nn.Module):
 
     def __init__(self, shared_feat: FeatureBlock, input_dim: int, output_dim: int, 
-                batch_dim: int, n_steps: int)  -> None:
+                batch_dim: int, hidden_dim: int, n_steps: int)  -> None:
         super().__init__()
         self.shared_feat = shared_feat
         self.input_dim = input_dim
         self.output_dim = output_dim
+        self.hidden_dim = hidden_dim
         self.n_steps = n_steps
         self.batch_dim = batch_dim
         self.output = torch.zeros(batch_dim, input_dim)
@@ -44,7 +44,7 @@ class TabNetDecoder(nn.Module):
 
 
     def build_decoder_steps(self) -> List[nn.Module]:
-        return [TabNetDecoderStep(self.shared_feat, self.input_dim, self.output_dim)
+        return [TabNetDecoderStep(self.shared_feat, self.hidden_dim, self.output_dim)
                 for _ in range(self.n_steps)]
 
 
