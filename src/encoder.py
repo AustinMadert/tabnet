@@ -14,9 +14,9 @@ class TabNetEncoderStep(nn.Module):
         self.input_dim = input_dim
         self.batch_dim = batch_dim
         self.hidden_dim = hidden_dim
-        self.att = AttentiveTransformer(input_dim=input_dim)
+        p = torch.ones(self.batch_dim, self.input_dim)
+        self.att = AttentiveTransformer(p=p, input_dim=input_dim)
         self.feat = self.build_feature_transformer()
-        self.p = torch.ones(self.batch_dim, self.input_dim)
         self.relu = nn.ReLU()
 
 
@@ -28,7 +28,7 @@ class TabNetEncoderStep(nn.Module):
 
 
     def forward(self, X: torch.Tensor, a: torch.Tensor) -> torch.Tensor:
-        mask, self.p = self.att(a, self.p)
+        mask = self.att(a)
         X *= mask
         out = self.feat(X)
         # Split activations from outputs in the columns dimension

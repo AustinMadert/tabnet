@@ -7,27 +7,26 @@ from activations import GLU
 
 class AttentiveTransformer(nn.Module):
 
-    def __init__(self, input_dim: int, rho: float = 1.0) -> None:
+    def __init__(self, p: torch.Tensor, input_dim: int, rho: float = 1.0) -> None:
         super().__init__()
+        self.p = p
         self.h = nn.Linear(input_dim, input_dim)
         self.bn = nn.BatchNorm1d(input_dim)
         self.sparsemax = Sparsemax(dim=-1)
         self.rho = rho
 
 
-    def update_p(self, p: torch.Tensor, mask: torch.Tensor
-                            ) -> Tuple[torch.Tensor, torch.Tensor]:
+    def update_p(self, mask: torch.Tensor) -> None:
         update = self.rho - mask
-        p *= update
-        return p
+        self.p *= update
 
 
-    def forward(self, a: torch.Tensor, p: torch.Tensor) -> torch.Tensor:
+    def forward(self, a: torch.Tensor) -> torch.Tensor:
         a = self.bn(self.h(a))
-        a = p * a
+        a = self.p * a
         mask = self.sparsemax(a)
-        p = self.update_p(p, mask)
-        return mask, p
+        self.update_p(mask)
+        return mask
 
 
 class FeatureBlock(nn.Module):

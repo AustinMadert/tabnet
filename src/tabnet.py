@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-from collections import OrderedDict
 from decoder import TabNetDecoder
 from encoder import TabNetEncoder
 from transformers import FeatureBlock
@@ -41,18 +40,18 @@ class TabNet(nn.Module):
 
 
     def build_shared_feature_transformer(self) -> nn.Module:
-        return nn.Sequential(OrderedDict([
-            ('fc1', nn.Linear(self.input_dim, self.hidden_dim)),
-            ('bn1', nn.BatchNorm1d(self.hidden_dim)),
-            ('glu1', GLU(input_dim=self.hidden_dim)),
-            ('feat1', FeatureBlock(self.hidden_dim, num_sub_blocks=1))
-        ]))
+        return nn.Sequential(
+            nn.Linear(self.input_dim, self.hidden_dim),
+            nn.BatchNorm1d(self.hidden_dim),
+            GLU(input_dim=self.hidden_dim),
+            FeatureBlock(self.hidden_dim, num_sub_blocks=1)
+        )
 
     def build_feature_transformer(self) -> nn.Module:
-        return nn.Sequential(OrderedDict([
-            ('shared', self.shared_feat),
-            ('featblock', FeatureBlock(self.hidden_dim))
-        ]))
+        return nn.Sequential(
+            self.shared_feat,
+            FeatureBlock(self.hidden_dim)
+        )
 
     # TODO: need to add flags to control mode of operation, or build separate classes
     def forward(self, X: torch.Tensor) -> torch.Tensor:
