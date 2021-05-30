@@ -7,11 +7,11 @@ from activations import GLU
 
 class AttentiveTransformer(nn.Module):
 
-    def __init__(self, p: torch.Tensor, input_dim: int, rho: float = 1.0) -> None:
+    def __init__(self, batch_dim: int, n_d: int, rho: float = 1.0) -> None:
         super().__init__()
-        self.p = p
-        self.h = nn.Linear(input_dim, input_dim)
-        self.bn = nn.BatchNorm1d(input_dim)
+        self.p = torch.ones(batch_dim, n_d)
+        self.h = nn.Linear(n_d, n_d)
+        self.bn = nn.BatchNorm1d(n_d)
         self.sparsemax = Sparsemax(dim=-1)
         self.rho = rho
 
@@ -31,19 +31,17 @@ class AttentiveTransformer(nn.Module):
 
 class FeatureBlock(nn.Module):
 
-    def __init__(self, hidden_dim: int, output_dim: int = None,
-                 num_sub_blocks: int = 2) -> None:
+    def __init__(self, hidden_dim: int, num_sub_blocks: int = 2) -> None:
         super().__init__()
-        self.hidden_dim = hidden_dim
-        self.output_dim = hidden_dim if not output_dim else output_dim
-        self.sub_blocks = [self.feature_sub_block() for _ in range(num_sub_blocks)]
+        self.sub_blocks = [self.feature_sub_block(hidden_dim) for _ in range(num_sub_blocks)]
+        self.norm = torch.sqrt(torch.Tensor([0.5]))
 
 
-    def feature_sub_block(self) -> nn.Sequential:
+    def feature_sub_block(self, hidden_dim: int) -> nn.Sequential:
         return nn.Sequential(
-            nn.Linear(self.hidden_dim, self.output_dim),
-            nn.BatchNorm1d(self.hidden_dim),
-            GLU(input_dim=self.hidden_dim)
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.BatchNorm1d(hidden_dim),
+            GLU(n_d=hidden_dim)
         )
 
     def forward(self, X: torch.Tensor) -> torch.Tensor:
@@ -52,7 +50,7 @@ class FeatureBlock(nn.Module):
             out = sub_block(X)
             out += identity
             # Normalization which halves Var
-            out *= torch.sqrt(torch.Tensor([0.5]))
+            out *= self.norm
         return out
 
 

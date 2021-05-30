@@ -8,23 +8,13 @@ from transformers import FeatureBlock, AttentiveTransformer
 
 class TabNetEncoderStep(nn.Module):
 
-    def __init__(self, shared_feat: FeatureBlock, input_dim: int, batch_dim: int, hidden_dim: int) -> None:
+    def __init__(self, shared_feat: nn.Sequential, n_d: int, batch_dim: int, 
+                 hidden_dim: int) -> None:
         super().__init__()
-        self.shared_feat = shared_feat
-        self.input_dim = input_dim
-        self.batch_dim = batch_dim
-        self.hidden_dim = hidden_dim
-        p = torch.ones(self.batch_dim, self.input_dim)
-        self.att = AttentiveTransformer(p=p, input_dim=input_dim)
-        self.feat = self.build_feature_transformer()
+        self.splits = (n_d, hidden_dim - n_d)
+        self.att = AttentiveTransformer(batch_dim, n_d)
+        self.feat = nn.Sequential(shared_feat, FeatureBlock(hidden_dim))
         self.relu = nn.ReLU()
-
-
-    def build_feature_transformer(self) -> nn.Module:
-        return nn.Sequential(
-            self.shared_feat,
-            FeatureBlock(self.hidden_dim)
-        )
 
 
     def forward(self, X: torch.Tensor, a: torch.Tensor) -> torch.Tensor:
@@ -32,8 +22,7 @@ class TabNetEncoderStep(nn.Module):
         X *= mask
         out = self.feat(X)
         # Split activations from outputs in the columns dimension
-        splits = (int(out.shape[1] / 2), int(out.shape[1] / 2))
-        out, a = out.split(splits, dim=1)
+        out, a = out.split(self.splits, dim=1)
         out = self.relu(out)
         return out, a, mask
 
@@ -41,25 +30,15 @@ class TabNetEncoderStep(nn.Module):
 
 class TabNetEncoder(nn.Module):
 
-    def __init__(self, shared_feat: nn.Sequential, input_dim: int, batch_dim: int,  
-                output_dim: int = None, hidden_dim: int = None, n_steps: int = 10) -> None:
+    def __init__(self, shared_feat: nn.Sequential, n_d: int, batch_dim: int,  
+                output_dim: int, hidden_dim: int, n_steps: int) -> None:
         super().__init__()
-        self.shared_feat = shared_feat
-        self.n_steps = n_steps
-        self.batch_dim = batch_dim
-        self.input_dim = input_dim
-        self.output_dim = input_dim if not output_dim else output_dim
-        self.hidden_dim = hidden_dim
-        self.bn = nn.BatchNorm1d(input_dim)
-        self.fc = nn.Linear(input_dim, input_dim)
-        self.steps = self.build_encoder_steps()
-        self.attributes = torch.zeros(self.batch_dim, self.input_dim)
-        self.output = torch.zeros(self.batch_dim, self.input_dim)
-
-
-    def build_encoder_steps(self) -> List[nn.Module]:
-        return [TabNetEncoderStep(self.shared_feat, self.input_dim, self.batch_dim, self.hidden_dim) 
-                for _ in range(self.n_steps)]
+        self.bn = nn.BatchNorm1d(n_d)
+        self.fc = nn.Linear(n_d, output_dim)
+        self.steps = [TabNetEncoderStep(shared_feat, n_d, batch_dim, hidden_dim) 
+                      for _ in range(n_steps)]
+        self.attributes = torch.zeros(batch_dim, n_d)
+        self.output = torch.zeros(batch_dim, n_d)
 
 
     def forward(self, X: torch.Tensor, a: torch.Tensor) -> torch.Tensor:
