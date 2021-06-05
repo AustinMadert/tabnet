@@ -4,6 +4,7 @@ import torch.nn as nn
 from torch.nn.modules.container import Sequential
 
 from transformers import FeatureBlock, AttentiveTransformer
+from normailzation import GhostBatchNormalization
 
 
 class TabNetEncoderStep(nn.Module):
@@ -33,7 +34,7 @@ class TabNetEncoder(nn.Module):
     def __init__(self, shared_feat: nn.Sequential, n_d: int, batch_dim: int,  
                 output_dim: int, hidden_dim: int, n_steps: int) -> None:
         super().__init__()
-        self.bn = nn.BatchNorm1d(n_d)
+        self.bn = GhostBatchNormalization(n_d)
         self.fc = nn.Linear(n_d, output_dim)
         self.steps = [TabNetEncoderStep(shared_feat, n_d, batch_dim, hidden_dim) 
                       for _ in range(n_steps)]

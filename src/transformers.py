@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 from sparsemax import Sparsemax
 from activations import GLU
+from normailzation import GhostBatchNormalization
 
 
 class AttentiveTransformer(nn.Module):
@@ -11,7 +12,7 @@ class AttentiveTransformer(nn.Module):
         super().__init__()
         self.p = torch.ones(batch_dim, n_d)
         self.h = nn.Linear(n_d, n_d)
-        self.bn = nn.BatchNorm1d(n_d)
+        self.bn = GhostBatchNormalization(n_d, 8)
         self.sparsemax = Sparsemax(dim=-1)
         self.rho = rho
 
