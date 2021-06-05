@@ -4,6 +4,7 @@ from decoder import TabNetDecoder
 from encoder import TabNetEncoder
 from transformers import FeatureBlock
 from activations import GLU
+from normailzation import GhostBatchNormalization
 
 
 class TabNet(nn.Module):
@@ -16,7 +17,7 @@ class TabNet(nn.Module):
         self.splits = (n_d, n_a)
         self.shared_feat = nn.Sequential(
             nn.Linear(n_d, hidden_dim),
-            nn.BatchNorm1d(hidden_dim),
+            GhostBatchNormalization(hidden_dim, 8),
             GLU(n_d=hidden_dim),
             FeatureBlock(hidden_dim, num_sub_blocks=1)
         )
@@ -34,7 +35,8 @@ class TabNet(nn.Module):
         self.decoder = TabNetDecoder(**kwargs)
         kwargs['output_dim'] = output_dim
         self.encoder = TabNetEncoder(**kwargs)
-        self.bn = nn.BatchNorm1d(n_d)
+        self.bn = GhostBatchNormalization(n_d, 8)
+
 
 
     # TODO: need to add flags to control mode of operation, or build separate classes
