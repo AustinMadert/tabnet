@@ -6,10 +6,11 @@ import math
 class GhostBatchNormalization(nn.Module):
 
     
-    def __init__(self, num_features: int, virtual_batch_size: int) -> None:
+    def __init__(self, num_features: int, virtual_batch_size: int, 
+                 momentum: float = 0.01) -> None:
         super().__init__()
         self.vbs = virtual_batch_size
-        self.bn = nn.BatchNorm1d(num_features=num_features)
+        self.bn = nn.BatchNorm1d(num_features=num_features, momentum=momentum)
 
     
     def forward(self, X: torch.Tensor) -> torch.Tensor:
