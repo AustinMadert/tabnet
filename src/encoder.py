@@ -34,7 +34,7 @@ class TabNetEncoder(nn.Module):
     def __init__(self, shared_feat: nn.Sequential, n_d: int, batch_dim: int,  
                 output_dim: int, hidden_dim: int, n_steps: int) -> None:
         super().__init__()
-        self.bn = GhostBatchNormalization(n_d)
+        self.bn = GhostBatchNormalization(n_d, 8)
         self.fc = nn.Linear(n_d, output_dim)
         self.steps = [TabNetEncoderStep(shared_feat, n_d, batch_dim, hidden_dim) 
                       for _ in range(n_steps)]
