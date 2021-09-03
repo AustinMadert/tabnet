@@ -1,1 +1,2 @@
-from src.model import TabNetModel as TabNet
+from src.model import TabNetRegressor
+from src.model import TabNetClassifier
