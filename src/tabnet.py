@@ -4,7 +4,7 @@ from decoder import TabNetDecoder
 from encoder import TabNetEncoder
 from transformers import FeatureBlock
 from activations import GLU
-from normailzation import GhostBatchNormalization
+from normalization import GhostBatchNormalization
 
 
 class TabNet(nn.Module):
@@ -13,6 +13,8 @@ class TabNet(nn.Module):
                  output_dim: int = None, n_a: int = None) -> None:
         super().__init__()
         n_a = n_d if not n_a else n_a
+        if not output_dim:
+            output_dim = n_d
         hidden_dim = n_d + n_a
         self.splits = (n_d, n_a)
         self.shared_feat = nn.Sequential(
@@ -44,22 +46,6 @@ class TabNet(nn.Module):
         X = self.bn(X)
         out = self.shared_feat(X)
         _, a = out.split(self.splits, dim=1)
-        encoded, attributes = self.encoder(X, a)
+        encoded, attributes, reg = self.encoder(X, a)
         decoded = self.decoder(encoded)
-        return decoded, attributes
-
-
-from sklearn.datasets import load_boston
-X, y = load_boston(return_X_y=True)
-
-tn = TabNet(
-    n_d=X.shape[1], 
-    batch_dim=16, 
-    n_steps=3,
-    output_dim=X.shape[1],
-    n_a=X.shape[1]
-)
-X = torch.Tensor(X[:16, :])
-X, attributes = tn.forward(X)
-
-print(X, attributes)
+        return decoded, attributes, reg

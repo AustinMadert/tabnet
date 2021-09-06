@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 from sparsemax import Sparsemax
 from activations import GLU
-from normailzation import GhostBatchNormalization
+from normalization import GhostBatchNormalization
 
 
 class AttentiveTransformer(nn.Module):
@@ -53,7 +53,3 @@ class FeatureBlock(nn.Module):
             # Normalization which halves Var
             out *= self.norm
         return out
-
-
-def sparsity_regularization(masks: torch.Tensor, eta: float = 0.00001) -> float:
-    pass

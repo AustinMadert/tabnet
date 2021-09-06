@@ -5,7 +5,6 @@ import math
 
 class GhostBatchNormalization(nn.Module):
 
-    
     def __init__(self, num_features: int, virtual_batch_size: int, 
                  momentum: float = 0.01) -> None:
         super().__init__()
