@@ -24,7 +24,7 @@ class TabNetRegressor(TorchModelBase):
         return TabNet(batch_dim=self.batch_size, n_d=self.n_d, n_steps=self.n_steps)
 
     def forward_propagate(self, X_batch: torch.Tensor, y_batch: torch.Tensor):
-        batch_preds, self.attributes, reg = self.model(*X_batch)
+        batch_preds, self.agg_mask, reg = self.model(*X_batch)
         err = self.loss(batch_preds, y_batch)
         err += reg
         return err

@@ -46,6 +46,6 @@ class TabNet(nn.Module):
         X = self.bn(X)
         out = self.shared_feat(X)
         _, a = out.split(self.splits, dim=1)
-        encoded, attributes, reg = self.encoder(X, a)
+        encoded, agg_mask, reg = self.encoder(X, a)
         decoded = self.decoder(encoded)
-        return decoded, attributes, reg
+        return decoded, agg_mask, reg

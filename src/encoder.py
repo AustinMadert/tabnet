@@ -36,11 +36,12 @@ class TabNetEncoder(nn.Module):
         super().__init__()
         self.n_steps = n_steps
         self.batch_dim = batch_dim
+        self.n_d = n_d
         self.bn = GhostBatchNormalization(n_d, 8)
         self.fc = nn.Linear(n_d, output_dim)
         self.steps = [TabNetEncoderStep(shared_feat, n_d, batch_dim, hidden_dim) 
                       for _ in range(n_steps)]
-        self.attributes = torch.zeros(batch_dim, n_d)
+        self.importances = torch.Tensor()
         self.output = torch.zeros(batch_dim, n_d)
         self.reg = torch.Tensor([0.])
 
@@ -50,13 +51,26 @@ class TabNetEncoder(nn.Module):
         return torch.sum(reg)
 
 
+    def build_aggregate_mask(self, batches: list, masks: list) -> torch.Tensor:
+        batches = torch.cat(batches, dim=-1)
+        masks = torch.cat(masks, dim=-1)
+        nu = batches.sum(dim=1).repeat(1, self.n_d, 1)
+        numer = torch.sum(nu * masks, dim=-1)
+        denom = torch.sum(numer ** 2)
+        return numer / denom
+
+
     def forward(self, X: torch.Tensor, a: torch.Tensor) -> torch.Tensor:
+        masks = []
+        outputs = []
         for step in self.steps:
             out, a, mask = step(X, a)
-            self.output += out
-            self.attributes += (mask * out)
             self.reg += self.sparsity_regularization(mask)
+            self.output += out
+            masks.append(mask.unsqueeze(dim=-1))
+            outputs.append(out.unsqueeze(dim=-1))
+        agg_mask = self.build_aggregate_mask(outputs, masks)        
 
         self.output = self.fc(self.output)
 
-        return self.output, self.attributes, self.reg
+        return self.output, agg_mask, self.reg
