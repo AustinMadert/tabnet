@@ -7,12 +7,11 @@ from model_bases import TorchModelBase
 from tabnet import TabNet
 
 
-class TabNetRegressor(TorchModelBase):
+class TabNetModel(TorchModelBase):
 
     def __init__(self, n_steps: int = 3, **kwargs) -> None:
         super().__init__(**kwargs)
         self.n_steps = n_steps
-        self.loss = nn.MSELoss() if not 'loss' in kwargs else kwargs['loss']
 
     def build_dataset(self, X, y=None):
         self.n_d = X.shape[1]
@@ -33,6 +32,22 @@ class TabNetRegressor(TorchModelBase):
         preds = self.predict(X, device=device)
         return mean_squared_error(y.to_numpy(), preds.to_numpy())
 
+    def pre_train(self, X):
+        return self
+
+
+class TabNetRegressor(TabNetModel):
+
+    def __init__(self, n_steps: int, **kwargs) -> None:
+        super().__init__(n_steps=n_steps, **kwargs)
+        self.loss = nn.MSELoss() if not 'loss' in kwargs else kwargs['loss']
+
+
+class TabNetClassifier(TabNetModel):
+
+    def __init__(self, n_steps: int, **kwargs) -> None:
+        super().__init__(n_steps=n_steps, **kwargs)
+        self.loss = nn.CrossEntropyLoss() if not 'loss' in kwargs else kwargs['loss']
 
 
 from sklearn.datasets import load_boston
